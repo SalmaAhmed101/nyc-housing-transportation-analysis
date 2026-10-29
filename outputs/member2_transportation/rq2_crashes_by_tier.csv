@@ -712,7 +712,6 @@ collision_id,community_district,borough,dev_tier,weekday,hour,year,ksi,fatalitie
 4532544,306,BROOKLYN,Higher development,Monday,9,2022,1,0
 4532525,311,BROOKLYN,Lower development,Monday,10,2022,1,1
 4532543,314,BROOKLYN,Lower development,Monday,16,2022,1,0
-4535113,314,BROOKLYN,Lower development,Monday,16,2022,1,0
 4532904,317,BROOKLYN,Higher development,Tuesday,10,2022,1,0
 4534689,302,BROOKLYN,Higher development,Tuesday,15,2022,1,0
 4533184,312,BROOKLYN,Lower development,Tuesday,18,2022,1,0
@@ -1670,7 +1669,6 @@ collision_id,community_district,borough,dev_tier,weekday,hour,year,ksi,fatalitie
 4568137,104,MANHATTAN,Higher development,Friday,22,2022,1,0
 4567898,112,MANHATTAN,Lower development,Saturday,0,2022,1,0
 4567373,103,MANHATTAN,Lower development,Sunday,0,2022,2,0
-4568099,103,MANHATTAN,Lower development,Sunday,0,2022,2,0
 4568293,103,MANHATTAN,Lower development,Sunday,19,2022,1,1
 4568080,109,MANHATTAN,Lower development,Sunday,21,2022,1,0
 4572508,104,MANHATTAN,Higher development,Monday,16,2022,1,0
@@ -5692,7 +5690,7 @@ collision_id,community_district,borough,dev_tier,weekday,hour,year,ksi,fatalitie
 4765817,307,BROOKLYN,Lower development,Tuesday,8,2024,1,0
 4765839,301,BROOKLYN,Higher development,Wednesday,19,2024,1,0
 4765872,502,STATEN ISLAND,Lower development,Sunday,22,2024,1,0
-4765917,112,MANHATTAN,Lower development,Monday,12,2024,1,0
+4765917,111,MANHATTAN,Higher development,Monday,12,2024,1,0
 4765937,103,MANHATTAN,Lower development,Wednesday,15,2024,1,0
 4765959,404,QUEENS,Lower development,Wednesday,19,2024,1,0
 4765975,203,BRONX,Higher development,Wednesday,10,2024,1,0
