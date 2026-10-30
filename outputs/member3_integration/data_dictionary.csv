@@ -1,0 +1,17 @@
+column,table(s),type,meaning
+community_district,all district tables,Int,Community district code: borough digit + 2-digit district (e.g. 301 = Brooklyn CD 1)
+cd_label,"cd_month, cd_total",text,"Short label for charts, e.g. 'BK 01'"
+borough,all tables,text,"MANHATTAN, BRONX, BROOKLYN, QUEENS or STATEN ISLAND (uppercase)"
+year_month,"cd_month, borough_month",text,YYYY-MM; the time key
+"year, month","cd_month, borough_month",int,Parts of year_month
+new_filings,all tables,int,"New-building job filings (unique jobs; job type exactly 'New Building'); filings, not completed buildings"
+new_units,all tables,int,"Sum of proposed dwelling units in those filings (values above 5,000 per filing were set to missing by Member 1)"
+is_large_pipeline_month,cd_month,bool,"True when new_units is above Q3 + 3 x IQR of non-zero months (flagged, not removed)"
+crashes,all tables,int,SIRTA crashes with at least one severe injury or death
+"severe_inj, fatalities",all tables,int,Severe injuries / deaths in those crashes
+ksi,all tables,int,Killed or seriously injured = severe_inj + fatalities
+"history_known, repeat_location",all tables,int,Crashes with a known 3-year history of similar severe crashes at the location / those with at least one
+log_new_units,cd_total,float,"log10(1 + new_units), for skewed scatter plots"
+ksi_per_1000_units,cd_total,float,"KSI per 1,000 proposed units; NaN where new_units = 0"
+ksi_per_filing,cd_total,float,KSI per new-building filing; NaN where there are no filings
+repeat_share,cd_total,float,repeat_location / history_known; NaN where history_known = 0
