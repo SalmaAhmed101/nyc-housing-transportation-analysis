@@ -1,16 +1,23 @@
-# Does New Housing Track with Traffic Safety in NYC?
+# Member 4: Research Analysis and Data Storytelling
 
 ## The question
-New housing and street safety are usually studied separately. Housing agencies track permits and units; transportation agencies track crashes. We asked whether community districts with more new housing also see more severe crash injuries, and whether construction activity comes before changes in crash counts.
+
+Which boroughs have the most killed or seriously injured (KSI) people per new housing unit, 2022–2026? And do community districts with bigger construction projects see more serious harm per filing?
 
 ## What we found
-- **More housing, somewhat more severe injuries.** Across NYC's 59 community districts from 2022 to 2026, districts with more new housing units tend to have somewhat more severe crash injuries. The link is weak (Spearman correlation 0.26) and only borderline statistically significant.
-- **No timing signal.** Construction filings do not appear to predict crash counts over the following 0 to 6 months. All correlations were close to zero.
+
+- Staten Island has the highest rate: 139.87 killed or seriously injured people per 1,000 proposed new-building units. The Bronx has the lowest at 62.01, a gap of 77.86 per 1,000 units. Manhattan (114.68), Queens (92.10) and Brooklyn (76.32) fall in between.
+- Across 59 community districts, average project size and serious harm per filing are positively correlated (Spearman rho = 0.65, p < 0.001). Districts with larger average projects tend to have more serious harm per filing. This is an association, not proof that projects cause harm.
 
 ## Limitations
-- These are correlations, not causes. Larger districts have more housing and more crashes, so district size may explain much of the pattern.
-- We counted totals rather than rates. Per-resident and per-road-mile comparisons would be fairer but need population and road data not included here.
-- Permit filings measure activity, not completed construction. The crash data covers only 2022 to 2026.
+
+- Association, not causation. Traffic, road design and density may explain the patterns.
+- Proposed units and filings are plans, not completed buildings or new residents.
+- Crashes are counted only when they can be placed in a district, and fatal crashes are under-represented in the SIRTA data.
+- Staten Island's rate rests on only 3 districts.
+- Ratios from districts with few filings are unstable, so districts below 5 filings are excluded from the second question.
+- DOB NOW filings from 2021 onward may partly reflect the system being phased in.
 
 ## Why it matters for NYC
-Planners and safety teams can use district-level views like this to spot where housing growth and crash injuries are both high, and where to look more closely before approving new development. The findings are a starting point for that review, not a verdict on any single project.
+
+Planners and safety teams get a starting list: boroughs where serious harm is high for each new unit, and districts where bigger projects coincide with more harm per filing. Those places can be checked first for traffic calming, work-zone management and crossing protection as development proceeds. This is a starting point for review, not a verdict on any project.
