@@ -1,0 +1,15 @@
+[theme]
+baseFontSize = 17
+headingFontSizes = ["2.4rem", "2rem", "1.5rem", "1.3rem", "1.1rem", "1rem"]
+
+[theme.light]
+primaryColor = "#e8590c"
+backgroundColor = "#faf8f5"
+secondaryBackgroundColor = "#f0ebe3"
+textColor = "#1f2933"
+
+[theme.dark]
+primaryColor = "#ff7a2f"
+backgroundColor = "#14181d"
+secondaryBackgroundColor = "#1f262d"
+textColor = "#eef0f2"
