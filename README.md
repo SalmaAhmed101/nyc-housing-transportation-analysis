@@ -10,6 +10,13 @@ An interactive data engineering and visualization project exploring the relation
 Outputs were recorded on 29/10/2026
 
 ## Contributions
+### Member 2: Transportation Data Preparation and cleaning
+- Selected and justified the transportation dataset (SIRTA, T4)
+- Conducted exploratory data analysis (EDA), including data structure, data types, missing values, duplicates, outliers, and inconsistencies
+- Performed data cleaning and standardization and creating validation charts and checks(`notebooks/transportation_data_cleaning_and_analysis.ipynb`)
+- Produced the cleaned transportation dataset(`outputs/member2_transportation/sirta_clean.csv`)
+- Defined two research questions using member 3's final integrated dataset, investigating the relationship between new housing development and traffic safety: repeat-risk crash shares and total serious crashes (KSI) (`notebooks/member2_research_questions.ipynb`)
+
 ### Member 4: Research Analysis and Data Storytelling
 
 - Defined two research questions: borough harm per new housing unit, and project size vs harm per filing.
