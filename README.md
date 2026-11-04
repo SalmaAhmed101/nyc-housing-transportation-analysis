@@ -11,11 +11,10 @@ Outputs were recorded on 29/10/2026
 
 ## Contributions
 ### Member 2: Transportation Data Preparation and cleaning
-- Selected and justified the transportation dataset (SIRTA, T4)
-- Conducted exploratory data analysis (EDA), including data structure, data types, missing values, duplicates, outliers, and inconsistencies
+- Selected and justified the transportation dataset (SIRTA, T4) and ran the exploratory data analysis (EDA): structure, missing values, duplicates, outliers and inconsistencies.
 - Performed data cleaning and standardization and creating validation charts and checks(`notebooks/transportation_data_cleaning_and_analysis.ipynb`)
 - Produced the cleaned transportation dataset(`outputs/member2_transportation/sirta_clean.csv`)
-- Defined two research questions using member 3's final integrated dataset, investigating the relationship between new housing development and traffic safety: repeat-risk crash shares and total serious crashes (KSI) (`notebooks/member2_research_questions.ipynb`)
+- Defined two research questions using Member 3's `cd_month.csv`: whether districts with more proposed housing have a larger share of crashes at repeat-risk locations, and whether new housing is steered toward or away from districts with a record of serious crashes(`notebooks/m2_research_questions.ipynb`).
 
 ### Member 4: Research Analysis and Data Storytelling
 
