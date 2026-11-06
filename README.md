@@ -29,3 +29,10 @@ Outputs were recorded on 29/10/2026
 - Rebuilt the research charts from Members 1 to 4 from the saved CSVs in `outputs/` so they respond to the filters, and left spots for Member 6.
 - Defined two research questions: whether months with more planned housing have more serious crashes by borough, and whether new housing is more concentrated than serious harm (`notebooks/m5_research_questions.ipynb`).
 - Added `requirements.txt`. To run: `pip install -r requirements.txt`, then `streamlit run website/app.py`.
+
+### Member 6: Interactive Reports, Deployment, and Testing
+- Developed two unique research questions focusing on the concentration of housing vs. crashes, and the percentage change in housing filings vs. total crashes over time. Created visualizations in `notebooks/m6_research_questions.ipynb`.
+- Implemented the "Generate Report" button functionality in `app.py`, allowing users to generate a filtered text summary and download the filtered dataset as a CSV.
+- Connected all filters and search functionality to the visualizations ensuring real-time updates across all members' charts.
+- Deployed the website using Streamlit Community Cloud and tested full functionality.
+- Finalized GitHub repository and submission materials.
