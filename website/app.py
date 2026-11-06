@@ -83,7 +83,11 @@ with st.sidebar:
     housing = st.selectbox("Housing activity", HOUSING, key="housing",
                            help="Large-building months are months when a district's planned units were unusually high.")
     st.button("Reset filters", on_click=reset)
-    st.button("Generate Report", disabled=True, help="Coming from Member 6")
+    # Member 6: Generate Report Button
+    if st.button("Generate Report"):
+        st.session_state.show_report = True
+    if st.session_state.get("show_report", False):
+        st.sidebar.success("Report Generated! Check the Action tab.")
 
 col, HARM = SEVERITY[severity]
 in_borough = in_borough.assign(ksi=in_borough[col])
@@ -291,16 +295,75 @@ with insight:
           "Is serious harm packed into a few neighborhoods the way new housing is?", cum_fig,
           "Neighborhoods are ranked from most to least, and each line is the running total. These are raw counts, not adjusted for population."))
 
+        # --- MEMBER 6 CHARTS ---
     st.divider()
     st.header("Member 6 · Reports and deployment")
-    for column, n in zip(st.columns(2), (1, 2)):
-        column.info(f"**Question {n}:** chart goes here. At least one of Member 6's charts links housing and transportation.")
+    
+    # RQ1 Chart (Concentration)
+    city_units = d.new_units.sum()
+    city_ksi = d.ksi.sum()
+    m6_t = d.groupby(["cd_label", "borough"]).agg(new_units=("new_units", "sum"), ksi=("ksi", "sum")).reset_index()
+    m6_t["share_units"] = (m6_t["new_units"] / city_units) * 100 if city_units > 0 else 0
+    m6_t["share_ksi"] = (m6_t["ksi"] / city_ksi) * 100 if city_ksi > 0 else 0
 
+    m6_fig1 = px.scatter(
+        m6_t, x="share_units", y="share_ksi", color="borough", hover_name="cd_label", size="new_units",
+        labels={"share_units": "Share of NYC New Units (%)", "share_ksi": f"Share of NYC {HARM} (%)", "borough": "Borough"}
+    ).add_hline(y=100/59, line_dash="dot", line_color="gray").add_vline(x=100/59, line_dash="dot", line_color="gray").update_layout(showlegend=False, margin=dict(t=30))
+
+    # RQ2 Chart (YoY change 2022-2025)
+    b_comp = in_borough[in_borough.year.isin([2022, 2025])]
+    if len(b_comp.year.unique()) == 2:
+        b_comp = b_comp.groupby(["borough", "year"]).agg(new_filings=("new_filings", "sum"), crashes=("crashes", "sum")).reset_index()
+        b_pivot = b_comp.pivot(index="borough", columns="year", values=["new_filings", "crashes"]).reset_index()
+        b_pivot.columns = ["borough", "filings_2022", "filings_2025", "crashes_2022", "crashes_2025"]
+        b_pivot["filings_pct"] = ((b_pivot["filings_2025"] - b_pivot["filings_2022"]) / b_pivot["filings_2022"].replace(0, np.nan)) * 100
+        b_pivot["crash_pct"] = ((b_pivot["crashes_2025"] - b_pivot["crashes_2022"]) / b_pivot["crashes_2022"].replace(0, np.nan)) * 100
+        b_pivot = b_pivot.dropna(subset=["filings_pct", "crash_pct"])
+
+        m6_fig2 = px.scatter(
+            b_pivot, x="filings_pct", y="crash_pct", color="borough", text="borough",
+            labels={"filings_pct": "Change in Filings (2022-2025) %", "crash_pct": "Change in Total Crashes (2022-2025) %", "borough": "Borough"}
+        ).add_hline(y=0, line_dash="dot", line_color="gray").add_vline(x=0, line_dash="dot", line_color="gray").update_traces(textposition="top center").update_layout(showlegend=False, margin=dict(t=30))
+    else:
+        m6_fig2 = px.scatter(title="Please select 'All' Years in the sidebar to view the 2022-2025 comparison.")
+
+    pair("Member 6 · Interactive Reports and Testing",
+         ("New housing is highly concentrated, but serious crashes are more spread out across districts",
+          "Do districts with a higher share of new housing also have a higher share of serious crashes?",
+          m6_fig1,
+          "Compares the % share of citywide units vs % share of citywide KSI. All filters apply to the data totals."),
+         ("Boroughs with the biggest growth in housing filings did not necessarily see total crashes rise proportionally",
+          "In boroughs where building filings increased most, did total crashes also increase proportionally?",
+          m6_fig2,
+          "Compares the percentage change from 2022 to 2025. Borough and year filters apply."))
+    
 with action:
     st.subheader("What to do next")
     cards([("1 · Check four neighborhoods first", "Queens 12, Brooklyn 1, Brooklyn 5 and Bronx 1 have a lot of new building and a lot of serious crashes."),
            ("2 · Look at high-crash areas with little building", "Neighborhoods such as Queens 7 and Brooklyn 18 have serious crashes that construction doesn't explain."),
            ("3 · Watch Staten Island", "It has the most serious crashes per new housing unit.")])
+
+    # --- MEMBER 6 GENERATE REPORT LOGIC ---
+    st.divider()
+    st.subheader("Generated Report Summary")
+    if st.session_state.get("show_report", False):
+        st.success(f"Report Generated for: {borough} | {year} | {cd}")
+        
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Total Housing Units Planned", f"{d.new_units.sum():,.0f}")
+        col2.metric("Total New Building Applications", f"{d.new_filings.sum():,}")
+        col3.metric(f"Total {HARM}", f"{d.ksi.sum():,}")
+        
+        st.write("You can download the filtered data below to use in your own reports:")
+        st.download_button(
+            label="📥 Download Filtered Data as CSV",
+            data=d.to_csv(index=False).encode('utf-8'),
+            file_name=f'nyc_data_{borough}_{year}.csv',
+            mime='text/csv',
+        )
+    else:
+        st.info("Click the 'Generate Report' button in the sidebar to view a summary of the current filters and download data.")
 
     story = (HERE / "story.md").read_text(encoding="utf8")
     sections = {s.split("\n", 1)[0]: s.split("\n", 1)[1].strip() for s in story.split("\n## ")[1:]}
