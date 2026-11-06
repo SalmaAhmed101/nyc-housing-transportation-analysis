@@ -1,11 +1,11 @@
 from html import escape
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 import streamlit as st
-from plotly.subplots import make_subplots
+from scipy import stats
 
 HERE = Path(__file__).parent
 OUT = HERE.parent / "outputs"
@@ -37,19 +37,6 @@ st.markdown(CSS, unsafe_allow_html=True)
 @st.cache_data
 def load(path="member3_integration/cd_month.csv"):
     return pd.read_csv(OUT / path)
-
-
-@st.cache_data
-def zip_surge():
-    p = load("member1_housing/rq_panel_zip_month.csv").sort_values(["zip_code", "year_month"])
-    p["ksi_next"] = sum(p.groupby("zip_code").ksi.shift(-k) for k in range(1, 7))
-    p = p[p.year >= 2022]
-    p["z"] = p.groupby("zip_code").new_building_filings.transform(lambda x: (x - x.mean()) / x.std())
-    p["ratio"] = p.ksi_next / p.groupby("zip_code").ksi_next.transform("mean")
-    p = p.replace([float("inf"), float("-inf")], float("nan")).dropna(subset=["z", "ratio"])
-    inf = float("inf")
-    p["activity"] = pd.cut(p.z, [-inf, -0.5, 0.5, 1.5, inf], labels=["Below usual", "Usual", "Above usual", "Surge"])
-    return p
 
 
 df = load()
@@ -111,6 +98,17 @@ def by_borough(frame):
     return frame if borough == "All" else frame[frame.borough == borough]
 
 
+def spearman(x, y):
+    return stats.spearmanr(x, y)[0] if len(x) > 2 else float("nan")
+
+
+def partial_spearman(x, y, control):
+    rx, ry, rc = (stats.rankdata(v) for v in (x, y, control))
+    res_x = rx - np.polyval(np.polyfit(rc, rx, 1), rc)
+    res_y = ry - np.polyval(np.polyfit(rc, ry, 1), rc)
+    return stats.pearsonr(res_x, res_y)[0]
+
+
 def show(fig):
     st.plotly_chart(fig.update_layout(font_size=15, legend_title_text=""), width="stretch")
 
@@ -153,66 +151,60 @@ with overview:
            ("3 · Now what?", "Check the 4 neighborhoods that rank top 10 for both new housing and serious crashes first (Queens 12, Brooklyn 1, Brooklyn 5, Bronx 1), then high-crash areas with little building.")])
 
 with insight:
-    z = by_borough(load("member1_housing/rq1_zip_changes.csv"))
-    z_fig = px.scatter(z, x="filing_change", y="ksi_change", hover_name="zip_code", color_discrete_sequence=[GREY],
-                       labels={"filing_change": "Change in building applications (2023 to 2024)",
-                               "ksi_change": "Change in people killed or<br>seriously hurt (2023 to 2024)"}).add_hline(y=0, line_dash="dot")
+    totals = d.groupby(["cd_label", "borough"])[["new_filings", "crashes", "ksi"]].sum().reset_index()
+    totals = totals[totals.crashes > 0]
+    totals["ksi_per_crash"] = totals.ksi / totals.crashes
+    r1_fig = px.scatter(totals, x="new_filings", y="ksi_per_crash", hover_name="cd_label", color_discrete_sequence=[GREY],
+                        labels={"new_filings": "New building applications", "ksi_per_crash": "People killed or seriously<br>hurt per crash"})
+    if len(totals) > 2:
+        slope, icpt = np.polyfit(totals.new_filings, totals.ksi_per_crash, 1)
+        xs = np.array([totals.new_filings.min(), totals.new_filings.max()])
+        r1_fig.add_scatter(x=xs, y=slope * xs + icpt, mode="lines", line_color=ACCENT, showlegend=False)
+        r1_fig.add_annotation(x=0.02, y=0.98, xref="paper", yref="paper", showarrow=False, bordercolor="gray", bgcolor="white",
+                              font_color="black", text=f"Pearson r = {totals.new_filings.corr(totals.ksi_per_crash):.3f}")
 
-    s = by_borough(zip_surge())
-    s = s if year == "All" else s[s.year == year]
-    g = s.groupby("activity", observed=True).ratio.agg(["mean", "sem", "count"]).reset_index()
-    g["ci"] = 1.96 * g["sem"]
-    g["surge"] = g.activity.eq("Surge")
-    surge_fig = (px.bar(g, x="activity", y="mean", error_y="ci", color="surge", text=g["count"].map("n={:,}".format),
-                        color_discrete_map={True: ACCENT, False: GREY},
-                        labels={"activity": "Applications that month vs the ZIP's usual",
-                                "mean": "Serious harm in the next<br>6 months (1 = usual)"})
-                 .add_hline(y=1, line_dash="dot").update_traces(insidetextanchor="middle").update_layout(showlegend=False))
+    yoy = in_borough[in_borough.year.between(2022, 2026)].groupby(["borough", "year"]).ksi.sum().groupby("borough").diff().dropna().reset_index()
+    yoy_fig = (px.line(yoy, x="year", y="ksi", facet_col="borough", facet_col_wrap=3, markers=True, color_discrete_sequence=[ACCENT],
+                       labels={"ksi": "Year-over-year change", "year": ""})
+               .add_hline(y=0, line_dash="dot").update_xaxes(dtick=1).for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1])))
 
     pair("Member 1 · Housing data",
-         ("ZIP codes where building applications grew did not see serious harm grow",
-          "Did ZIP codes with more new building applications see a bigger change in serious harm?", z_fig,
-          "Each dot is a ZIP code. Fixed to 2023 vs 2024, the two full years. Only the borough filter applies."),
-         ("After a surge in building applications, serious harm stays at its usual level",
-          "After a month with unusually many applications, does serious harm rise over the next 6 months?", surge_fig,
-          "Each ZIP code is compared with its own usual level, so busy areas don't skew the result. Borough and year filters apply."))
+         ("Neighborhoods with more building applications tend to have more serious harm per crash",
+          "Do community districts with more new building applications have more severe crashes?", r1_fig,
+          "Each dot is a neighborhood, 2022 to 2026. The link is modest and is not proof of cause. Borough, year, housing and district filters apply."),
+         ("Serious harm fell in most boroughs from 2022 to 2024, then rose in 2025",
+          "How does the year-over-year change in people killed or seriously hurt differ by borough?", yoy_fig,
+          "2026 is a partial year, so its drop is not a real fall. Borough and harm filters apply."))
 
     c = by_borough(load("member2_transportation/rq_cd_panel.csv"))
-    repeat_fig = (px.scatter(c[c.history_known >= 50], x="log_new_units", y="repeat_share", size="history_known", hover_name="cd_label",
-                             color_discrete_sequence=[ACCENT],
-                             labels={"log_new_units": "New housing units (log scale: 2 = 100, 3 = 1,000, 4 = 10,000)",
-                                     "repeat_share": "Share of crashes at spots<br>with a serious-crash history"})
-                  .update_yaxes(tickformat=".0%"))
+    c = c.assign(log_new_units=np.log10(c.new_units.clip(lower=1)))
+    c = c[c.history_known >= 50]
+    overall = c.repeat_location.sum() / max(c.history_known.sum(), 1)
+    repeat_fig = (px.scatter(c, x="new_units", y="repeat_share", hover_name="cd_label", color_discrete_sequence=[ACCENT],
+                             hover_data=["new_filings", "history_known", "repeat_location"],
+                             title=f"Spearman ρ = {spearman(c.new_units, c.repeat_share):.2f}",
+                             labels={"new_units": "Total proposed new housing units",
+                                     "repeat_share": "Share of crashes at<br>repeat-risk locations"})
+                  .update_yaxes(tickformat=".0%")
+                  .add_hline(y=overall, line_dash="dot", line_color="gray", annotation_text=f"Overall share: {overall:.1%}"))
 
-    w = by_borough(load("member2_transportation/rq2_crashes_by_tier.csv"))
-    w = w if year == "All" else w[w.year == year]
-    if cd != "All":
-        w = w[w.community_district == df.loc[df.cd_label == cd, "community_district"].iloc[0]]
-    days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-    tiers = ["Lower development", "Higher development"]
-    grids = []
-    for tier in tiers:
-        grid = w[w.dev_tier == tier].groupby(["weekday", "hour"]).size().unstack(fill_value=0)
-        grid = grid.reindex(index=days, columns=range(24), fill_value=0)
-        grids.append(100 * grid / max(grid.values.sum(), 1))
-    heat_fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.14,
-                             subplot_titles=[f"{t} (n={(w.dev_tier == t).sum():,} crashes)" for t in tiers])
-    for i, grid in enumerate(grids, 1):
-        heat_fig.add_trace(go.Heatmap(z=grid.values, x=list(range(24)), y=days, zmin=0, zmax=max(g_.values.max() for g_ in grids),
-                                      colorscale="Oranges", showscale=i == 2, colorbar={"title": "% of crashes"},
-                                      hovertemplate="%{y} %{x}:00<br>%{z:.2f}% of crashes<extra></extra>"), row=i, col=1)
-    heat_fig.update_xaxes(title_text="Hour of day", dtick=3, row=2, col=1)
-    heat_fig.update_yaxes(autorange="reversed").update_layout(height=620)
+    h = by_borough(load("member2_transportation/rq2_halves_panel.csv"))
+    halves_fig = px.scatter(h, x="ksi_early", y="new_units_late", size="new_units_early", size_max=28, color="borough", hover_name="cd_label",
+                            hover_data={"ksi_early": ":,.0f", "new_units_early": ":,.0f", "new_units_late": ":,.0f"},
+                            title=(f"ρ = {spearman(h.ksi_early, h.new_units_late):.2f}; {partial_spearman(h.ksi_early, h.new_units_late, h.new_units_early):.2f} "
+                                   "after controlling for earlier housing") if len(h) > 3 else None,
+                            labels={"ksi_early": "KSI in the first half of the period",
+                                    "new_units_late": "Proposed new housing units<br>in the second half", "new_units_early": "Proposed units in the first half", "borough": "Borough"})
 
     pair("Member 2 · Transportation data",
          ("Neighborhoods with more new housing have more crashes at spots that were already dangerous",
           "Do neighborhoods with more new housing have more crashes at spots that were already dangerous?", repeat_fig,
           "A spot counts as dangerous if a similar serious crash happened there in the previous 3 years. "
           "Dot size is the number of crashes. Neighborhoods with fewer than 50 crashes are left out. Only the borough filter applies."),
-         ("Serious crashes happen at the same times of the week, whether or not a neighborhood is building a lot",
-          "Do serious crashes happen at different times of the week in neighborhoods that are building a lot?", heat_fig,
-          "Neighborhoods are split in half by how much new housing they have. Each square is the share of that half's crashes. "
-          "Borough, year and district filters apply."))
+         ("New housing does not follow past serious crashes: it stays where it was already planned",
+          "Is new housing being steered toward or away from neighborhoods with a record of serious crashes?", halves_fig,
+          "Dot size is the housing planned in the first half; the first number in the chart title is the raw link, the second removes the effect of earlier housing. Once earlier housing is accounted for, the link with past harm almost disappears. "
+          "Only the borough filter applies."))
 
     t = by_borough(load("member3_integration/cd_total.csv"))
     t = t.assign(ksi=t[col])
