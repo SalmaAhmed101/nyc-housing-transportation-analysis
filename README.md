@@ -18,6 +18,14 @@ Outputs were recorded on 29/10/2026
 - Produced the cleaned transportation dataset(`outputs/member2_transportation/sirta_clean.csv`)
 - Defined two research questions using Member 3's `cd_month.csv`: whether districts with more proposed housing have a larger share of crashes at repeat-risk locations, and whether new housing is steered toward or away from districts with a record of serious crashes(`notebooks/m2_research_questions.ipynb`).
 
+### Member 3: Dataset integration and post-join cleaning
+* Chose the integration level and join key, with alternatives and justification.
+* Standardised the community-district key on the housing side and built the layered district assignment for crashes (reported, polygon, nearest filing) with validation.
+* Aggregated both datasets, built the complete-grid join, and performed and documented the post-join cleaning.
+* Validated the integrated data (structure checks, reconciliation with the inputs, coverage charts).
+* Exported `cd_month.csv`, `cd_total.csv`, `borough_month.csv`, `crashes_with_district.csv` and the data dictionary for Members 4-6.
+* Research questions 1 and 2 above, with one visualization each.
+
 ### Member 4: Research Analysis and Data Storytelling
 - Defined two research questions: borough harm per new housing unit, and project size vs harm per filing.
 - Checked Member 3's integrated table for structure, grid completeness, missing values and distributions.
