@@ -261,7 +261,7 @@ with insight:
                 .update_traces(textposition="top center", marker_color=ACCENT, textfont_color=ACCENT))
 
     pair("Member 4 · Research and story",
-         ("Staten Island has the most serious crashes for each new housing unit",
+         ("Staten Island has the highest rate of people killed or seriously hurt per new housing unit",
           "Which boroughs have the most people killed or seriously hurt per new housing unit?", rate_fig,
           "Serious harm in each borough divided by its planned new housing units. Staten Island's rate rests on only 3 districts. All filters apply."),
          ("Neighborhoods with bigger projects tend to see more serious harm per application",
